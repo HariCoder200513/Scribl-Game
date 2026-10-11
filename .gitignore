@@ -1,3 +1,4 @@
+session
 # --- Secrets / local environment ---
 .env
 *.env.local
