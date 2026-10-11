@@ -55,6 +55,30 @@ extractions clean.
    by a row lock. Explicitly single-instance only; multi-instance correctness is
    a V5/V6 concern.
 
+## API surface (implemented in V1)
+
+All endpoints are under `/api` and JSON. Authenticated endpoints require the
+`X-Scribl-Player-Token` header issued at create/join.
+
+| Endpoint | Purpose | Auth |
+|---|---|---|
+| `POST /api/rooms` | Create a room; returns `{roomCode, playerId, playerToken}` | — |
+| `POST /api/rooms/{code}/join` | Join a lobby; returns player session | — |
+| `GET /api/rooms/{code}/state` | Pollable lobby/game snapshot | player token |
+
+Authorization invariants enforced server-side:
+- A player may only read the state of their own room.
+- Only LOBBy rooms accept new players; names must be unique in the room;
+  rooms cap at 8 players.
+
+Cluster/default indexes (`rooms.code`, `players.token` unique constraints,
+all primary keys) are retained because they enforce integrity. **All four
+secondary query indexes added during scaffolding were removed in migration
+`V2`** so the V1 baseline is genuinely unindexed for the hot paths (players-by-
+room, rounds-by-room, points-by-round+seq, guesses-by-round). Re-adding them is
+a V4 optimisation to be justified by measured latency/query-cost deltas, not
+guessed. See `V2__drop_initial_indexes.sql` for the rationale.
+
 ## Game-state model
 
 The **room row is the aggregate root**: status, current round number, current

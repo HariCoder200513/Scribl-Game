@@ -44,7 +44,8 @@ cd backend
 JAVA_HOME=/opt/homebrew/opt/openjdk@21 mvn spring-boot:run
 ```
 
-The app starts on `http://localhost:8080`. Health check: `GET /actuator/health`.
+The app starts on `http://localhost:8081` (port 8080 is left free for a local
+Jenkins). Health check: `GET /actuator/health`.
 Flyway applies `db/migration` on startup (schema is created automatically).
 
 ## Tests

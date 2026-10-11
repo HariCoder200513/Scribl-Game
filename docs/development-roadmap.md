@@ -22,8 +22,8 @@ PostgreSQL + HTTP polling. Per-point persistence.
 
 ### Implementation order
 
-1. Repo scaffold, Maven project skeleton, Flyway migrations, `.env` wiring.
-2. Room create/join/state + player-token identity + validation. Tests.
+1. Repo scaffold, Maven project skeleton, Flyway migrations, `.env` wiring. ✅
+2. Room create/join/state + player-token identity + validation. Tests. ✅
 3. Lobby start + round lifecycle (word select, timer, sweeper). Tests.
 4. Drawing ingest / `?sinceSeq=N` retrieval / clear + drawer authorization. Tests.
 5. Guessing + scoring + round end + leaderboard. Tests.
@@ -38,12 +38,16 @@ PostgreSQL + HTTP polling. Per-point persistence.
 - **V2**: k6 load harness; measure throughput, P50/P95/P99, error rate, DB
   query/write counts, CPU/memory across increasing player counts. Store scripts,
   config, raw results, and a Markdown report under `load-tests/` and
-  `docs/benchmarks/`.
+  `docs/benchmarks/`. Records the unindexed-baseline numbers the index
+  experiment needs.
 - **V3**: replace polling with WebSockets; preserve ordering and per-room
   authorization; benchmark old vs new under comparable workloads.
 - **V4**: batch points into strokes/events, throttle/flush, dedupe, trim
   payloads, separate durable history from transient drawing state; measure each
-  change separately.
+  change separately. **Index experiment:** re-add the four secondary indexes
+  dropped by `V2__drop_initial_indexes.sql` on the *same* grown dataset and
+  measure query latency/cost before and after; keep only what the measurements
+  justify.
 - **V5**: introduce Redis when a concrete need is demonstrated; shared room
   state, cross-instance delivery, reconnect snapshots, room expiry, race
   handling at round transitions, idempotent commands.
