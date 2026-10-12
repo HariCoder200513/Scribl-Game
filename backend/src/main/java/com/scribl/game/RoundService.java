@@ -94,6 +94,16 @@ public class RoundService {
             return; // not expired yet
         }
 
+        completeRound(room);
+        rooms.save(room);
+    }
+
+    /**
+     * Close the active round and either start the next one or finish the game.
+     * Callers must already hold the room lock and run in a transaction; this is
+     * shared by the timer sweep and by a correct guess ending the round early.
+     */
+    public void completeRound(Room room) {
         endRound(room);
         if (room.getCurrentRoundNumber() >= room.getTotalRounds()) {
             finishRoom(room);
@@ -102,7 +112,6 @@ public class RoundService {
             beginRound(room, room.getCurrentRoundNumber() + 1);
             log.info("round advanced room={} round={}", room.getCode(), room.getCurrentRoundNumber());
         }
-        rooms.save(room);
     }
 
     private void beginRound(Room room, int roundNumber) {

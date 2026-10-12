@@ -41,6 +41,11 @@ public class RoomController {
         return roomService.getState(code, currentPlayer);
     }
 
+    @GetMapping("/{code}/leaderboard")
+    public LeaderboardDto leaderboard(@PathVariable String code, @CurrentPlayer Player currentPlayer) {
+        return roomService.leaderboard(code, currentPlayer);
+    }
+
     @PostMapping("/{code}/start")
     public void start(@PathVariable String code, @CurrentPlayer Player currentPlayer) {
         roundService.start(code, currentPlayer);

@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -103,6 +104,22 @@ public class RoomService {
             return null;
         }
         return Math.max(0, Duration.between(Instant.now(), room.getRoundEndsAt()).getSeconds());
+    }
+
+    @Transactional(readOnly = true)
+    public LeaderboardDto leaderboard(String code, Player currentPlayer) {
+        Room room = getRoomByCode(code);
+        if (!room.getId().equals(currentPlayer.getRoomId())) {
+            throw new UnauthorizedException("you are not a member of this room");
+        }
+
+        List<PlayerDto> standings = players.findByRoomIdOrderByJoinedAtAsc(room.getId())
+                .stream()
+                .sorted(Comparator.comparingInt(Player::getScore).reversed())
+                .map(PlayerDto::from)
+                .toList();
+
+        return new LeaderboardDto(room.getCode(), room.getStatus(), standings);
     }
 
     private String uniqueCode() {

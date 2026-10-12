@@ -68,6 +68,8 @@ All endpoints are under `/api` and JSON. Authenticated endpoints require the
 | `POST /api/rooms/{code}/start` | Host starts the game (round 1 begins) | player token, host only |
 | `POST /api/rooms/{code}/drawing` | Drawer appends a stroke or canvas clear | player token, current drawer only |
 | `GET /api/rooms/{code}/drawing?sinceSeq=N&roundNumber=R` | Incremental drawing events for a round | player token, room member |
+| `POST /api/rooms/{code}/guesses` | Non-drawer submits a guess | player token, room member (not drawer) |
+| `GET /api/rooms/{code}/leaderboard` | Standings ordered by score | player token, room member |
 
 Authorization invariants enforced server-side:
 - A player may only read the state of their own room.
@@ -78,6 +80,7 @@ Authorization invariants enforced server-side:
   receive `null`.
 - Only the current drawer may append drawing events, and only while a round is
   active. Any room member may read the drawing stream.
+- Only non-drawers may guess, and only while a round is active.
 
 ## Round lifecycle and timers
 
@@ -114,6 +117,23 @@ This is the deliberate V1 baseline: per-event inserts, and a `(round_id, seq)`
 read that is **not** indexed (dropped in `V2`) so V4 can measure re-adding it.
 Writes are drawer-only and gated on an active round; reads require room
 membership so every client can render the canvas.
+
+## Guessing and scoring
+
+Any non-drawer may submit a guess while the round is active. A guess is matched
+case-insensitively against the current word and recorded. A correct guess:
+
+- scores the guesser `100 + seconds left on the clock` (speed bonus),
+- scores the drawer a flat `50`,
+- ends the round immediately and advances the game through the **same** guarded
+  transition the timer sweep uses (`RoundService.completeRound`), so a
+  timer-expired round and a solved round never diverge.
+
+V1 simplification: there is no separate "round over" reveal interlude — the
+guess response reports the outcome and the next round (or `FINISHED`) is
+observable on the next state poll. Scores are written in the guess transaction.
+The leaderboard (`GET /leaderboard`) returns members ordered by score; ties keep
+join order.
 
 ## Index strategy (V1 baseline)
 
