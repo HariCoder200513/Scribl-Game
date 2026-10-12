@@ -24,7 +24,7 @@ PostgreSQL + HTTP polling. Per-point persistence.
 
 1. Repo scaffold, Maven project skeleton, Flyway migrations, `.env` wiring. ✅
 2. Room create/join/state + player-token identity + validation. Tests. ✅
-3. Lobby start + round lifecycle (word select, timer, sweeper). Tests.
+3. Lobby start + round lifecycle (word select, timer, sweeper). Tests. ✅
 4. Drawing ingest / `?sinceSeq=N` retrieval / clear + drawer authorization. Tests.
 5. Guessing + scoring + round end + leaderboard. Tests.
 6. Frontend scaffold (Vite + React + TS), API client, Home + Lobby.

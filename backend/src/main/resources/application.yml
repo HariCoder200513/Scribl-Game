@@ -30,6 +30,9 @@ spring:
 server:
   port: ${SERVER_PORT:8081}
 
+scribl:
+  round-duration-seconds: ${ROUND_DURATION_SECONDS:60}
+
 management:
   endpoints:
     web:

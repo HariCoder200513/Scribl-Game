@@ -9,6 +9,8 @@ import com.scribl.player.PlayerRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -78,13 +80,29 @@ public class RoomService {
                 .map(PlayerDto::from)
                 .toList();
 
+        boolean isDrawer = room.getCurrentDrawerId() != null
+                && room.getCurrentDrawerId().equals(currentPlayer.getId());
+        String word = isDrawer ? room.getCurrentWord() : null;
+        Long secondsRemaining = secondsRemaining(room);
+
         return new RoomStateDto(
                 room.getCode(),
                 room.getStatus(),
                 room.getTotalRounds(),
                 room.getCurrentRoundNumber(),
                 room.getHostPlayerId(),
+                room.getCurrentDrawerId(),
+                room.getRoundEndsAt(),
+                secondsRemaining,
+                word,
                 memberDtos);
+    }
+
+    private Long secondsRemaining(Room room) {
+        if (room.getRoundEndsAt() == null) {
+            return null;
+        }
+        return Math.max(0, Duration.between(Instant.now(), room.getRoundEndsAt()).getSeconds());
     }
 
     private String uniqueCode() {

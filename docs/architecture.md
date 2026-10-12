@@ -65,11 +65,34 @@ All endpoints are under `/api` and JSON. Authenticated endpoints require the
 | `POST /api/rooms` | Create a room; returns `{roomCode, playerId, playerToken}` | — |
 | `POST /api/rooms/{code}/join` | Join a lobby; returns player session | — |
 | `GET /api/rooms/{code}/state` | Pollable lobby/game snapshot | player token |
+| `POST /api/rooms/{code}/start` | Host starts the game (round 1 begins) | player token, host only |
 
 Authorization invariants enforced server-side:
 - A player may only read the state of their own room.
-- Only LOBBy rooms accept new players; names must be unique in the room;
+- Only LOBBY rooms accept new players; names must be unique in the room;
   rooms cap at 8 players.
+- Only the host may start a game; at least 2 players are required.
+- The secret word is only returned to the current drawer. All other players
+  receive `null`.
+
+## Round lifecycle and timers
+
+`POST /start` begins round 1: the server picks the drawer (join order), draws a
+random word (avoiding words already used in the room), and sets a round
+deadline (`round_ends_at`).
+
+A single-threaded `RoundScheduler` (`fixedDelay = 1s`) finds expired
+`IN_PROGRESS` rooms and advances each in its **own transaction**: the room is
+re-read under a pessimistic row lock, the expiry is revalidated on fresh data,
+then the current round is closed and the next begins (drawer rotates through
+join order) or the room finishes. Because each transition locks and revalidates
+in a fresh transaction, a transition happens exactly once; a concurrent sweep
+simply no-ops. This is the exactly-once contract that becomes cross-instance in
+V5/V6.
+
+Round duration is configurable: `scribl.round-duration-seconds` (default 60).
+
+## Index strategy (V1 baseline)
 
 Cluster/default indexes (`rooms.code`, `players.token` unique constraints,
 all primary keys) are retained because they enforce integrity. **All four

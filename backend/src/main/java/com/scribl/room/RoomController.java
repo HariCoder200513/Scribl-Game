@@ -1,6 +1,7 @@
 package com.scribl.room;
 
 import com.scribl.common.CurrentPlayer;
+import com.scribl.game.RoundService;
 import com.scribl.player.Player;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -17,9 +18,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class RoomController {
 
     private final RoomService roomService;
+    private final RoundService roundService;
 
-    public RoomController(RoomService roomService) {
+    public RoomController(RoomService roomService, RoundService roundService) {
         this.roomService = roomService;
+        this.roundService = roundService;
     }
 
     @PostMapping
@@ -36,5 +39,10 @@ public class RoomController {
     @GetMapping("/{code}/state")
     public RoomStateDto getState(@PathVariable String code, @CurrentPlayer Player currentPlayer) {
         return roomService.getState(code, currentPlayer);
+    }
+
+    @PostMapping("/{code}/start")
+    public void start(@PathVariable String code, @CurrentPlayer Player currentPlayer) {
+        roundService.start(code, currentPlayer);
     }
 }
