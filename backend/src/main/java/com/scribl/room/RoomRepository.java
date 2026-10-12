@@ -25,4 +25,9 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select r from Room r where r.id = :id")
     Optional<Room> findByIdForUpdate(@Param("id") Long id);
+
+    /** Lock a room by code; guards seq assignment when the current drawer draws. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select r from Room r where r.code = :code")
+    Optional<Room> findByCodeForUpdate(@Param("code") String code);
 }

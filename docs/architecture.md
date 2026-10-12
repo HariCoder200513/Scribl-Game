@@ -66,6 +66,8 @@ All endpoints are under `/api` and JSON. Authenticated endpoints require the
 | `POST /api/rooms/{code}/join` | Join a lobby; returns player session | — |
 | `GET /api/rooms/{code}/state` | Pollable lobby/game snapshot | player token |
 | `POST /api/rooms/{code}/start` | Host starts the game (round 1 begins) | player token, host only |
+| `POST /api/rooms/{code}/drawing` | Drawer appends a stroke or canvas clear | player token, current drawer only |
+| `GET /api/rooms/{code}/drawing?sinceSeq=N&roundNumber=R` | Incremental drawing events for a round | player token, room member |
 
 Authorization invariants enforced server-side:
 - A player may only read the state of their own room.
@@ -74,6 +76,8 @@ Authorization invariants enforced server-side:
 - Only the host may start a game; at least 2 players are required.
 - The secret word is only returned to the current drawer. All other players
   receive `null`.
+- Only the current drawer may append drawing events, and only while a round is
+  active. Any room member may read the drawing stream.
 
 ## Round lifecycle and timers
 
@@ -91,6 +95,25 @@ simply no-ops. This is the exactly-once contract that becomes cross-instance in
 V5/V6.
 
 Round duration is configurable: `scribl.round-duration-seconds` (default 60).
+
+## Drawing stream
+
+Drawing is an append-only stream of one row per event, `seq` numbered per round
+in commit order. Each event carries an `action`:
+
+- `POINT` — a stroke segment with geometry (`x`, `y`), `color`, `size`, `tool`.
+- `CLEAR` — wipes the round canvas (geometry is null).
+
+Clients replay the stream and poll `GET /drawing?sinceSeq=N`, receiving only
+events with `seq > N`; a `CLEAR` event tells them to reset before applying the
+events that follow it. The next `seq` is `max(seq) + 1` for the round, assigned
+under the same pessimistic room lock the round sweeper uses, so it is
+collision-free without a unique index.
+
+This is the deliberate V1 baseline: per-event inserts, and a `(round_id, seq)`
+read that is **not** indexed (dropped in `V2`) so V4 can measure re-adding it.
+Writes are drawer-only and gated on an active round; reads require room
+membership so every client can render the canvas.
 
 ## Index strategy (V1 baseline)
 
