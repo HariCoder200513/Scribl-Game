@@ -33,6 +33,12 @@ PostgreSQL + HTTP polling. Per-point persistence.
 9. End-to-end integration test; build + full test run.
 10. Documentation close-out (architecture, ADRs, engineering notes).
 
+### Progress notes
+
+- [2026-10-12](engineering-notes/2026-10-12.md) — steps 3–5: round lifecycle and
+  sweeper, append-only drawing, guessing/scoring/leaderboard; defects fixed and
+  live Neon verification.
+
 ## Later milestones (outline only)
 
 - **V2**: k6 load harness; measure throughput, P50/P95/P99, error rate, DB
