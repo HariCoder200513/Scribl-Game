@@ -5,11 +5,13 @@ skribbl.io). The project evolves a deliberately simple implementation into a
 measured, scalable one, one milestone at a time.
 
 - `backend/` — Java 21 + Spring Boot (modular monolith)
-- `frontend/` — React + TypeScript (Vite) — added in a later V1 step
+- `frontend/` — React + TypeScript (Vite) client
 - `load-tests/` — k6 harness — added in V2
 - `docs/` — architecture, roadmap, decisions, benchmarks
 
-Current status: **V1 baseline in progress** (REST + PostgreSQL + polling).
+Current status: **V1 baseline in progress** (REST + PostgreSQL + polling). Backend
+game loop (rooms, rounds, drawing, guessing, scoring, leaderboard) and the
+Home/Lobby frontend are complete; the game screen is next.
 
 ## Prerequisites
 
@@ -47,6 +49,20 @@ JAVA_HOME=/opt/homebrew/opt/openjdk@21 mvn spring-boot:run
 The app starts on `http://localhost:8081` (port 8080 is left free for a local
 Jenkins). Health check: `GET /actuator/health`.
 Flyway applies `db/migration` on startup (schema is created automatically).
+
+## Running the frontend
+
+With the backend running, start the Vite dev server:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open `http://localhost:5173`. The client calls the API on the same origin under
+`/api`, and Vite proxies those requests to the backend on `:8081` — so there is
+no CORS to configure. See `frontend/README.md` for details.
 
 ## Tests
 

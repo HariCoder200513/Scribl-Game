@@ -163,6 +163,25 @@ are recorded in `guesses`.
 | `drawing_points` | Append-only canvas events, keyed by `(round_id, seq)`.         |
 | `guesses`        | Guess submissions and whether each was correct.                |
 
+## Frontend (V1)
+
+A React + TypeScript single-page app (Vite) under `frontend/`. It is a thin,
+polling client — all rules and authority stay on the server.
+
+- **Routing:** `/` (Home), `/room/:code` (Lobby), `/room/:code/game` (Game).
+- **API access:** a typed client (`src/api/`) calls the API on the same origin
+  under `/api`; the Vite dev server proxies `/api` to the backend on `:8081`, so
+  no CORS configuration is needed in development. A deployed build can point at
+  another API base via `VITE_API_BASE_URL`.
+- **Identity:** the create/join response (`roomCode`, `playerId`, `playerToken`)
+  is stored in `localStorage`; the token is sent as `X-Scribl-Player-Token`.
+- **Live updates:** `useRoomState` polls `GET /state` on an interval. This is the
+  deliberate V1 polling baseline that V3 replaces with WebSockets.
+
+The Home screen creates or joins a room; the Lobby shows players, the room code,
+and a host-only Start button. Game-screen features (canvas, guesses) are added in
+the next step.
+
 ## Known V1 limitations (by design)
 
 - Per-point inserts and full-string/polling reads stress the database.
